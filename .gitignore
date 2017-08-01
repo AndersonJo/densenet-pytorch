@@ -1,0 +1,8 @@
+# Projects
+.ipynb_checkpoints
+
+# Python
+*.pyc
+
+# Data
+*.zip
