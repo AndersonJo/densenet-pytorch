@@ -1,8 +1,10 @@
 # Projects
 .ipynb_checkpoints
+.idea
 
 # Python
 *.pyc
 
 # Data
 *.zip
+CIFAR10
