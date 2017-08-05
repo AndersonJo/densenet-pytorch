@@ -1,8 +1,11 @@
 from typing import List
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision import transforms
+from torchvision.datasets import CIFAR10
 
 
 class TransitionLayer(nn.Sequential):
@@ -10,7 +13,6 @@ class TransitionLayer(nn.Sequential):
         super(TransitionLayer, self).__init__()
 
         self.add_module('norm', nn.BatchNorm2d(in_filter))
-        # self.add_module('relu', nn.ReLU(inplace=True))
         self.add_module('conv', nn.Conv2d(in_filter, out_channels=out_filter, kernel_size=1,
                                           stride=1, padding=0, bias=False))
         self.add_module('pool', nn.AvgPool2d(kernel_size=2, stride=2, padding=1))
@@ -114,6 +116,7 @@ class DenseNet(DenseNetInit):
             out_filter = int(in_filter * compression_rate)
             if i + 1 != N:
                 transition_layer = TransitionLayer(in_filter, out_filter)
+                self.add_module(f'trainsition{i}', transition_layer)
                 self.transitions.append(transition_layer)
                 in_filter = out_filter
             else:
