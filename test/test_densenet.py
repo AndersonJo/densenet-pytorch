@@ -31,7 +31,8 @@ def convert(x):
 def test_hello():
     train_x, train_y, test_x, test_y = get_data()
     x = Variable(torch.FloatTensor(convert(train_x[0:32])))
-    model: nn.Module = DenseNet(24, 0.5, n_class=2, blocks=[12, 12, 12])  # TransitionLayer(in_filter=3, out_filter=3)
+    model: nn.Module = DenseNet(24, 0.5, n_class=2, blocks=[20, 20, 20],
+                                fc_size=13632)  # TransitionLayer(in_filter=3, out_filter=3)
     pred = model(x)
 
     print('Model Layer:', len(list(model.parameters())))

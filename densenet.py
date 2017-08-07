@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import torch
@@ -30,6 +30,8 @@ class BottleNeckLayer(nn.Sequential):
 class DenseLayer(nn.Sequential):
     def __init__(self, in_filter: int, out_filter: int):
         super(DenseLayer, self).__init__()
+        self.in_filter = in_filter
+        self.out_filter = out_filter
         self.add_module('norm', nn.BatchNorm2d(in_filter))
         self.add_module('relu', nn.ReLU(inplace=True))
         self.add_module('conv', nn.Conv2d(in_filter, out_filter, kernel_size=3, stride=1, padding=1))
@@ -62,6 +64,7 @@ class DenseBlockLayer(nn.Module):
                 h = bottleneck_layer(h)
             h = dense_layer(h)
             h = torch.cat((x, h), 1)
+
             x = h
         return h
 
@@ -83,7 +86,7 @@ class DenseNetInit(nn.Module):
 
 
 class DenseNet(DenseNetInit):
-    def __init__(self, growth_rate: int, compression_rate: float, n_class: int,
+    def __init__(self, growth_rate: int, compression_rate: float, n_class: int, fc_size: int,
                  blocks: List[int], bottlenecks: List[bool] = None):
         """
         :param growth_rate: 보통 12, 24, 40 같은 값으로 설정
@@ -122,11 +125,23 @@ class DenseNet(DenseNetInit):
             else:
                 self.transitions.append(None)
 
-        self.init_fc(in_filter, n_class)
+        self.init_fc(in_filter, fc_size, n_class)
 
-    def init_fc(self, in_filter: int, n_class: int):
+    def init_fc(self, in_filter: int, fc_size: int, n_class: int):
+        # for _ in range(len(self.blocks) - 1):
+        #     image_size = self.calculate_conv_output_size(image_size)
+        #
+        # n_fc = int(image_size[0] * image_size[1] * in_filter)
+
         self.bn1 = nn.BatchNorm2d(in_filter)
-        self.fc1 = nn.Linear(8256, n_class)
+        self.fc1 = nn.Linear(fc_size, n_class)
+
+    def calculate_conv_output_size(self, image_size: Tuple[int, int], filter: int = 2, padding=1,
+                                   stride=2):
+        image_size = np.array(image_size)
+        size = (image_size - filter + 2 * padding) / stride + 1
+        size = size.astype('int')
+        return size
 
     def forward(self, x):
         h = self.init_conv(x)
@@ -142,6 +157,7 @@ class DenseNet(DenseNetInit):
             h = dense_block(h)
             if transition is not None:
                 h = transition(h)
+
         return h
 
     def forward_fully_connected_layer(self, h):
