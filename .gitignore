@@ -8,3 +8,6 @@
 # Data
 *.zip
 CIFAR10
+
+# Model
+*.pt
